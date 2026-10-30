@@ -1,0 +1,38 @@
+# Integration (code line, 2026-08-27): the student's `ask_advisor` tool wires the frozen
+# cap2048 code qmaker (cost mode, 3-block) + the 35B advisor (thinking off) into the
+# multi-turn rollout. Endpoints from env (SUBSOLVER_ADVISOR_ENDPOINT / SUBSOLVER_QMAKER_ENDPOINT);
+# SUBSOLVER_QMAKER_COST=1 and SUBSOLVER_ADVISOR_MAX_TOKENS=2048 must be exported by the launcher
+# (the env overrides advisor_max_tokens below so training and eval share one cap knob).
+tools:
+  - class_name: "subsolver.ask_advisor_tool.AskAdvisorTool"
+    config:
+      type: native
+      enable_qmaker: true          # frozen qmaker rewrites X -> (question, instruction) before the advisor
+      reject_whole_problem: false  # whole gate retired (v2 line / Ours protocol)
+      judge_max_tokens: 16
+      advisor_max_tokens: 2048     # cap 2048
+      advisor_temperature: 0.0
+      qmaker_max_tokens: 2048      # 3-block qmaker output
+      qmaker_temperature: 0.7
+      qmaker_top_p: 0.95
+      pass_reasoning: true         # student's turn-1 reasoning -> qmaker (Phase-1 parity)
+      show_query_in_response: true
+      tokenizer_path: checkpoints/guru_gates/code_t4_best
+      timeout: 600.0
+    tool_schema:
+      type: function
+      function:
+        name: ask_advisor
+        description: >-
+          Ask an expert advisor one focused question to make progress on the
+          current problem. Ask for the specific thing you are missing at this
+          point in your reasoning. The advisor sees ONLY your question - not the
+          original problem, not your reasoning so far, and no other context.
+          Anything the advisor needs to know must be stated inside the question itself.
+        parameters:
+          type: object
+          properties:
+            query:
+              type: string
+              description: "A self-contained question to ask the expert advisor."
+          required: ["query"]

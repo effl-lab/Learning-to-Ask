@@ -1,0 +1,36 @@
+# Phase 2 tool config, Qwen3.5-2B thinking line (q35_math_line.md): same tool, but the frozen qmaker is a
+# THINKING 2B (served with --reasoning-parser qwen3, so the reply content is the post-</think> blocks) —
+# room for its thinking (= its RL rollout length) and the q35 training sampling (temp 1.0 / top_p 0.95;
+# top_k 20 rides on SUBSOLVER_EXTRA_SAMPLING_JSON). Longer timeout for 32k-token qmaker calls.
+# Endpoints come from env (SUBSOLVER_ADVISOR_ENDPOINT / SUBSOLVER_QMAKER_ENDPOINT),
+# exported by subsolver/run_student_grpo.sh. Tunables below.
+tools:
+  - class_name: "subsolver.ask_advisor_tool.AskAdvisorTool"
+    config:
+      type: native
+      enable_qmaker: true         # integration: frozen qmaker rewrites X -> Q before the advisor
+      reject_whole_problem: false  # whole gate retired in the v2 line
+      judge_max_tokens: 16
+      advisor_max_tokens: 4096
+      advisor_temperature: 0.0
+      qmaker_max_tokens: 32768
+      qmaker_temperature: 1.0
+      qmaker_top_p: 0.95
+      timeout: 3600.0
+    tool_schema:
+      type: function
+      function:
+        name: ask_advisor
+        description: >-
+          Ask an expert advisor a focused question to help you make progress on
+          the current problem. Use this when you need a specific fact,
+          definition, lemma, or sub-result that you cannot derive on your own.
+          The advisor sees ONLY your question - not the original problem or your
+          reasoning - so make the question self-contained.
+        parameters:
+          type: object
+          properties:
+            query:
+              type: string
+              description: "A self-contained question to ask the expert advisor."
+          required: ["query"]

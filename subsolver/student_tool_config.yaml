@@ -1,0 +1,34 @@
+# Phase 2 tool config: the student's `ask_advisor` tool wires the frozen
+# question-maker + advisor pipeline into the multi-turn rollout.
+# Endpoints come from env (SUBSOLVER_ADVISOR_ENDPOINT / SUBSOLVER_QMAKER_ENDPOINT),
+# exported by subsolver/run_student_grpo.sh. Tunables below.
+tools:
+  - class_name: "subsolver.ask_advisor_tool.AskAdvisorTool"
+    config:
+      type: native
+      enable_qmaker: false         # student-only: student's raw query X goes straight to advisor (no qmaker)
+      reject_whole_problem: true   # guard judges the student's X vs the original problem; WHOLE -> reject sentinel
+      judge_max_tokens: 16
+      advisor_max_tokens: 4096
+      advisor_temperature: 0.0
+      qmaker_max_tokens: 4096
+      qmaker_temperature: 0.7
+      qmaker_top_p: 0.95
+      timeout: 600.0
+    tool_schema:
+      type: function
+      function:
+        name: ask_advisor
+        description: >-
+          Ask an expert advisor a focused question to help you make progress on
+          the current problem. Use this when you need a specific fact,
+          definition, lemma, or sub-result that you cannot derive on your own.
+          The advisor sees ONLY your question - not the original problem or your
+          reasoning - so make the question self-contained.
+        parameters:
+          type: object
+          properties:
+            query:
+              type: string
+              description: "A self-contained question to ask the expert advisor."
+          required: ["query"]
