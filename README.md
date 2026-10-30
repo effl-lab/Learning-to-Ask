@@ -28,4 +28,7 @@ git-ignored); every script resolves the repo root from its own location (`VERL_R
 ## License
 
 Apache 2.0 (`LICENSE`, `Notice.txt`). verl is Copyright 2024 Bytedance Ltd. and/or its affiliates;
-the subsolver additions are Copyright 2025 Subsolver Authors.
+the subsolver additions are Copyright 2025 to the Authors.
+
+## Contact
+If you have any questions, please contact to yongjun.kim@postech.ac.kr
